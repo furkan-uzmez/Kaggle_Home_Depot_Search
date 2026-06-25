@@ -9,6 +9,8 @@ import pandas as pd
 from home_depot_search.config import load_config
 from home_depot_search.data.validation import EXPECTED_FILES
 
+CHUNK_SIZE = 100_000
+
 def get_file_sha256(filepath: Path) -> str:
     sha256_hash = hashlib.sha256()
     with open(filepath, "rb") as f:
@@ -56,7 +58,7 @@ def check_data(config, artifacts_dir: Path = None) -> None:
             columns = df.columns.tolist()
             
             # Efficient count without loading entire file into memory if it's large, considering quoted newlines
-            rows = sum(len(chunk) for chunk in pd.read_csv(path, usecols=[0], chunksize=100000))
+            rows = sum(len(chunk) for chunk in pd.read_csv(path, usecols=[0], chunksize=CHUNK_SIZE))
                 
             manifest[filename] = {
                 "size_bytes": path.stat().st_size,

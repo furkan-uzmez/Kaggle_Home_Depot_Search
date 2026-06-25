@@ -6,6 +6,44 @@ import pytest
 from home_depot_search.cli import main, check_data
 
 
+@pytest.fixture
+def mock_csv_data(tmp_path):
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+
+    train_file = data_dir / "train.csv"
+    train_file.write_text(
+        "id,product_uid,product_title,search_term,relevance\n1,1001,A,B,3.0\n"
+    )
+
+    test_file = data_dir / "test.csv"
+    test_file.write_text("id,product_uid,product_title,search_term\n2,1002,C,D\n")
+
+    attr_file = data_dir / "attributes.csv"
+    attr_file.write_text("product_uid,name,value\n1001,Brand,Home Depot\n")
+
+    desc_file = data_dir / "product_descriptions.csv"
+    
+    class ConfigData:
+        def __init__(self):
+            self.train_path = str(train_file)
+            self.test_path = str(test_file)
+            self.attributes_path = str(attr_file)
+            self.product_descriptions_path = str(desc_file)
+            
+    class Config:
+        def __init__(self):
+            self.data = ConfigData()
+
+    return {
+        "train_file": train_file,
+        "test_file": test_file,
+        "attr_file": attr_file,
+        "desc_file": desc_file,
+        "config": Config()
+    }
+
+
 def test_check_data_missing_files(tmp_path, capsys):
     # Setup mock config with missing files
     config_path = tmp_path / "config.yaml"
@@ -28,51 +66,12 @@ model:
     assert "data/train.csv" in captured.err or "data/train.csv" in captured.out
 
 
-def test_check_data_success(tmp_path, capsys):
+def test_check_data_success(tmp_path, mock_csv_data, capsys):
     # Setup mock config and valid files
-    data_dir = tmp_path / "data"
-    data_dir.mkdir()
-
-    train_file = data_dir / "train.csv"
-    train_file.write_text(
-        "id,product_uid,product_title,search_term,relevance\n1,1001,A,B,3.0\n"
-    )
-
-    test_file = data_dir / "test.csv"
-    test_file.write_text("id,product_uid,product_title,search_term\n2,1002,C,D\n")
-
-    attr_file = data_dir / "attributes.csv"
-    attr_file.write_text("product_uid,name,value\n1001,Brand,Home Depot\n")
-
-    desc_file = data_dir / "product_descriptions.csv"
-    desc_file.write_text("product_uid,product_description\n1001,A great product\n")
-
-    config_path = tmp_path / "config.yaml"
-    config_path.write_text(f"""
-data:
-  train_path: "{train_file}"
-  test_path: "{test_file}"
-  attributes_path: "{attr_file}"
-  product_descriptions_path: "{desc_file}"
-model:
-  name: "test"
-""")
+    mock_csv_data["desc_file"].write_text("product_uid,product_description\n1001,A great product\n")
 
     artifacts_dir = tmp_path / "artifacts"
-    
-    # We need to create a config object
-    class ConfigData:
-        def __init__(self):
-            self.train_path = str(train_file)
-            self.test_path = str(test_file)
-            self.attributes_path = str(attr_file)
-            self.product_descriptions_path = str(desc_file)
-            
-    class Config:
-        def __init__(self):
-            self.data = ConfigData()
-            
-    config = Config()
+    config = mock_csv_data["config"]
 
     check_data(config, artifacts_dir)
 
@@ -95,53 +94,14 @@ model:
     assert "sha256" in manifest["train.csv"]
     assert "size_bytes" in manifest["train.csv"]
 
-def test_check_data_multiline_csv(tmp_path, capsys):
+def test_check_data_multiline_csv(tmp_path, mock_csv_data, capsys):
     # Setup mock config and valid files with a multiline field
-    data_dir = tmp_path / "data"
-    data_dir.mkdir()
-
-    train_file = data_dir / "train.csv"
-    train_file.write_text(
-        "id,product_uid,product_title,search_term,relevance\n1,1001,A,B,3.0\n"
-    )
-
-    test_file = data_dir / "test.csv"
-    test_file.write_text("id,product_uid,product_title,search_term\n2,1002,C,D\n")
-
-    attr_file = data_dir / "attributes.csv"
-    attr_file.write_text("product_uid,name,value\n1001,Brand,Home Depot\n")
-
-    desc_file = data_dir / "product_descriptions.csv"
-    desc_file.write_text(
+    mock_csv_data["desc_file"].write_text(
         "product_uid,product_description\n1001,\"A great product\\nwith multiple\\nlines\"\n1002,Another product\n"
     )
 
-    config_path = tmp_path / "config.yaml"
-    config_path.write_text(f"""
-data:
-  train_path: "{train_file}"
-  test_path: "{test_file}"
-  attributes_path: "{attr_file}"
-  product_descriptions_path: "{desc_file}"
-model:
-  name: "test"
-""")
-
     artifacts_dir = tmp_path / "artifacts"
-    
-    # We need to create a config object
-    class ConfigData:
-        def __init__(self):
-            self.train_path = str(train_file)
-            self.test_path = str(test_file)
-            self.attributes_path = str(attr_file)
-            self.product_descriptions_path = str(desc_file)
-            
-    class Config:
-        def __init__(self):
-            self.data = ConfigData()
-            
-    config = Config()
+    config = mock_csv_data["config"]
 
     check_data(config, artifacts_dir)
 
