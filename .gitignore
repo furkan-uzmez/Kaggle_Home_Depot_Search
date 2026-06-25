@@ -1,4 +1,53 @@
-.claude
-docs/competation_pages
-.playwright-mcp
-data
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Jupyter
+.ipynb_checkpoints
+
+# pytest
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# Data
+data/
+*.zip
+*.tar.gz
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Tools
+.ruff_cache/
+.pyright_cache/

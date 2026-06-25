@@ -1,0 +1,36 @@
+[project]
+name = "home-depot-search"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Furkan", email = "furkan@example.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=2.4.6",
+    "pandas>=3.0.3",
+    "scikit-learn>=1.9.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.10.4,<0.11.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "basedpyright>=1.39.8",
+    "pytest>=9.1.1",
+    "ruff>=0.15.19",
+]
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "N"]
+ignore = []
+
+[tool.basedpyright]
+typeCheckingMode = "standard"
+pythonVersion = "3.11"
