@@ -38,7 +38,7 @@ htmlcov/
 coverage.xml
 
 # Data
-data/
+/data/
 *.zip
 *.tar.gz
 
@@ -51,3 +51,14 @@ data/
 # Tools
 .ruff_cache/
 .pyright_cache/
+
+# Generated experiment outputs
+/artifacts/
+/logs/
+/outputs/
+/test_dir/
+/test_newline.csv
+
+.claude
+.playwright-mcp
+docs/competation_pages

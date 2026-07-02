@@ -1,0 +1,31 @@
+# Default configuration for Home Depot Search Relevance
+
+data:
+  train_path: "data/train.csv"
+  test_path: "data/test.csv"
+  attributes_path: "data/attributes.csv"
+  product_descriptions_path: "data/product_descriptions.csv"
+
+model:
+  name: "default_model"
+  random_state: 42
+
+eda:
+  top_n_tokens: 50
+
+hpo:
+  enabled: false
+  n_trials: 50
+  n_folds: 3
+
+transformer:
+  model_name: "microsoft/deberta-v3-small"
+  max_length: 256
+  batch_size: 16
+  epochs: 3
+  learning_rate: 2e-5
+  warmup_ratio: 0.1
+  seed: 42
+
+submission:
+  clamp_range: [1.0, 3.0]
