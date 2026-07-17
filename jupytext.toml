@@ -1,0 +1,6 @@
+notebook_metadata_filter = "kernelspec,jupytext"
+cell_metadata_filter = "all,-autoscroll,-collapsed,-scrolled,-trusted,-ExecuteTime,-execution"
+
+[formats]
+"notebooks/" = "ipynb"
+"notebooks_src/" = "py:percent"

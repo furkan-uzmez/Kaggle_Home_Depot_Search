@@ -62,3 +62,5 @@ coverage.xml
 .claude
 .playwright-mcp
 docs/competation_pages
+.agent
+/results/
