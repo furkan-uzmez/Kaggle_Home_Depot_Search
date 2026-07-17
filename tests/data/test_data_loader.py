@@ -111,6 +111,19 @@ def test_merge_product_descriptions_correct_description(sample_train_csv, sample
         "Not only do angles make joints stronger... "
     )
 
+
+def test_merge_product_descriptions_rejects_duplicate_product_uid():
+    products = pd.DataFrame({"product_uid": [1], "product_title": ["Hammer"]})
+    descriptions = pd.DataFrame(
+        {
+            "product_uid": [1, 1],
+            "product_description": ["First description", "Second description"],
+        }
+    )
+
+    with pytest.raises(ValueError, match="product_uid must be unique"):
+        merge_product_descriptions(products, descriptions)
+
 def test_merge_product_descriptions_empty_for_missing(sample_test_csv, sample_descriptions_csv):
     test = load_test_data(sample_test_csv)
     desc = load_product_descriptions(sample_descriptions_csv)
@@ -252,4 +265,3 @@ def test_build_merged_dataset_attribute_text(all_csv_files):
     assert "BEHR DECKOVER" in row["product_text_raw"]
     assert "BEHR Premium Textured DECKOVER" in row["product_text_raw"]
     assert "Color: Red" in row["product_text_raw"]
-

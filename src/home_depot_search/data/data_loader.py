@@ -72,6 +72,11 @@ def merge_product_descriptions(
         DataFrame with an added 'product_description' column. Row count
         and index of the input are unchanged.
     """
+    if descriptions["product_uid"].duplicated().any():
+        raise ValueError(
+            "product_description product_uid must be unique before merging."
+        )
+
     merged = pd.merge(
         df,
         descriptions,
