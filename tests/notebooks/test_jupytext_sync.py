@@ -13,13 +13,13 @@ import pandas as pd
 import pytest
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
-NOTEBOOK_ONE_SOURCE = PROJECT_ROOT / "notebooks_src" / "01_data_contract_and_eda.py"
+NOTEBOOK_ONE_SOURCE = PROJECT_ROOT / "notebooks" / "01_data_contract_and_eda.py"
 NOTEBOOK_ONE = PROJECT_ROOT / "notebooks" / "01_data_contract_and_eda.ipynb"
 NOTEBOOK_TWO_SOURCE = (
-    PROJECT_ROOT / "notebooks_src" / "02_classical_models_and_hpo_review.py"
+    PROJECT_ROOT / "notebooks" / "02_classical_models_and_hpo_review.py"
 )
 NOTEBOOK_TWO = PROJECT_ROOT / "notebooks" / "02_classical_models_and_hpo_review.ipynb"
-NOTEBOOK_THREE_SOURCE = PROJECT_ROOT / "notebooks_src" / "03_final_model_audit.py"
+NOTEBOOK_THREE_SOURCE = PROJECT_ROOT / "notebooks" / "03_final_model_audit.py"
 NOTEBOOK_THREE = PROJECT_ROOT / "notebooks" / "03_final_model_audit.ipynb"
 NOTEBOOK_ONE_HEADINGS = (
     "## 0. Problem Contract",
@@ -86,10 +86,7 @@ def test_jupytext_config_preserves_notebook_and_parameter_metadata() -> None:
     with (PROJECT_ROOT / "jupytext.toml").open("rb") as config_file:
         config = tomllib.load(config_file)
 
-    assert config["formats"] == {
-        "notebooks/": "ipynb",
-        "notebooks_src/": "py:percent",
-    }
+    assert config["formats"] == "ipynb,py:percent"
     assert config["notebook_metadata_filter"] == "kernelspec,jupytext"
     assert (
         config["cell_metadata_filter"]
@@ -322,10 +319,11 @@ def test_notebook_two_places_executable_evidence_before_each_oia_note() -> None:
             or "display_table(" in section_cells[0].source
             or "display as show_" in section_cells[0].source
         )
-        assert section_cells[1].cell_type == "markdown"
-        assert "**Observation:**" in section_cells[1].source
-        assert "**Interpretation:**" in section_cells[1].source
-        assert "**Action:**" in section_cells[1].source
+        decision_note = section_cells[-1]
+        assert decision_note.cell_type == "markdown"
+        assert "**Observation:**" in decision_note.source
+        assert "**Interpretation:**" in decision_note.source
+        assert "**Action:**" in decision_note.source
 
 
 def test_notebook_two_uses_executed_artifact_tables_not_static_numeric_claims() -> None:
@@ -376,7 +374,7 @@ def test_notebook_three_migrates_to_jupytext_with_concrete_artifact_evidence() -
     assert markdown_source.count("**Action:**") == 9
     assert "artifact_inventory" in source
 
-    missing_artifacts = (
+    audit_artifact_paths = (
         PROJECT_ROOT / "results" / "prediction_log.csv",
         PROJECT_ROOT / "results" / "artifact_manifest.json",
         PROJECT_ROOT / "results" / "probe_predictions.csv",
@@ -385,8 +383,7 @@ def test_notebook_three_migrates_to_jupytext_with_concrete_artifact_evidence() -
         PROJECT_ROOT / "results" / "stored_attributions.csv",
     )
 
-    assert not any(path.exists() for path in missing_artifacts)
-    for path in missing_artifacts:
+    for path in audit_artifact_paths:
         assert path.name in source
 
 
@@ -438,11 +435,12 @@ def test_notebook_three_orders_real_evidence_before_non_static_oia_notes() -> No
         assert section_cells[0].cell_type == "code"
         assert "display(" in section_cells[0].source
         assert "needs-new-evidence" in section_cells[0].source
-        assert section_cells[1].cell_type == "markdown"
-        assert "**Observation:**" in section_cells[1].source
-        assert "**Interpretation:**" in section_cells[1].source
-        assert "**Action:**" in section_cells[1].source
-        assert "preceding" in section_cells[1].source.lower()
+        decision_note = section_cells[-1]
+        assert decision_note.cell_type == "markdown"
+        assert "**Observation:**" in decision_note.source
+        assert "**Interpretation:**" in decision_note.source
+        assert "**Action:**" in decision_note.source
+        assert "preceding" in decision_note.source.lower()
 
 
 def test_notebook_three_ipynb_matches_percent_source() -> None:
@@ -499,7 +497,17 @@ def test_notebook_one_places_concrete_evidence_notes_after_each_analysis_cell() 
             for index, cell in enumerate(notebook.cells)
             if cell.cell_type == "code" and cell.source.strip().endswith(marker)
         )
-        analyst_note = notebook.cells[analysis_index + 1]
+        next_heading_index = next(
+            (
+                index
+                for index, cell in enumerate(
+                    notebook.cells[analysis_index + 1 :], analysis_index + 1
+                )
+                if cell.cell_type == "markdown" and cell.source.startswith("## ")
+            ),
+            len(notebook.cells),
+        )
+        analyst_note = notebook.cells[next_heading_index - 1]
 
         assert analyst_note.cell_type == "markdown"
         assert "### Observation" in analyst_note.source

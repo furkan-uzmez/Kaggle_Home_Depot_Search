@@ -1103,13 +1103,20 @@ def test_final_model_audit_execution_with_mock_artifacts(tmp_path: Path) -> None
 def test_final_model_audit_execution_with_missing_artifacts(tmp_path: Path) -> None:
     notebook = read_notebook("03_final_model_audit.ipynb")
     
+    missing_artifact_parameters = {
+        "prediction_log_path": str(tmp_path / "prediction_log.csv"),
+        "artifact_manifest_path": str(tmp_path / "artifact_manifest.json"),
+        "probe_predictions_path": str(tmp_path / "probe_predictions.csv"),
+        "stress_probe_predictions_path": str(
+            tmp_path / "stress_probe_predictions.csv"
+        ),
+        "shortcut_probe_predictions_path": str(
+            tmp_path / "shortcut_probe_predictions.csv"
+        ),
+        "stored_attributions_path": str(tmp_path / "stored_attributions.csv"),
+    }
     namespace = {
-        "prediction_log_path": None,
-        "artifact_manifest_path": None,
-        "probe_predictions_path": None,
-        "stress_probe_predictions_path": None,
-        "shortcut_probe_predictions_path": None,
-        "stored_attributions_path": None,
+        **missing_artifact_parameters,
         "candidate_id": None,
         "tokenizer_id": None,
         "checkpoint_id": None,
@@ -1119,12 +1126,12 @@ def test_final_model_audit_execution_with_missing_artifacts(tmp_path: Path) -> N
         "Path": Path,
         "display": lambda x: None,
     }
-    
+
     for cell in notebook.cells:
         if cell.cell_type == "code":
             exec(cell.source, namespace)
-            if "RESULTS_DIR =" in cell.source:
-                namespace["RESULTS_DIR"] = tmp_path
+            if "prediction_log_path = None" in cell.source:
+                namespace.update(missing_artifact_parameters)
 
     inventory = namespace.get("artifact_inventory")
     assert inventory is not None
