@@ -27,6 +27,7 @@ data_dir: "Path | str | None" = None
 tokenizer_path: "Path | str | None" = None
 
 # %%
+import warnings  # noqa: E402
 from pathlib import Path  # noqa: E402
 from typing import Any, TypedDict, cast  # noqa: E402
 
@@ -34,6 +35,9 @@ import matplotlib.pyplot as plt  # noqa: E402
 import pandas as pd  # noqa: E402
 import yaml  # noqa: E402
 from pandas.util import hash_pandas_object  # noqa: E402
+from tqdm import TqdmWarning  # noqa: E402
+
+warnings.filterwarnings("ignore", category=TqdmWarning)
 
 PROJECT_ROOT = next(
     parent
@@ -117,8 +121,12 @@ problem_contract
 
 # %%
 setup_evidence = {
-    "project_root": str(PROJECT_ROOT),
-    "data_dir": str(resolved_data_dir),
+    "project_root_name": PROJECT_ROOT.name,
+    "data_dir": str(
+        resolved_data_dir.relative_to(PROJECT_ROOT)
+        if resolved_data_dir.is_relative_to(PROJECT_ROOT)
+        else resolved_data_dir
+    ),
     "configured_tokenizer": transformer_config["model_name"],
 }
 setup_evidence
@@ -548,16 +556,26 @@ def build_tokenizer_readiness(
     tokenizer_reference: str | Path,
     tokenizer_loader: Any = None,
 ) -> TokenizerReadiness:
+    import contextlib
+    import io
+    import re
+
     diagnostics: list[str] = []
     try:
         if tokenizer_loader is None:
             transformers = __import__("transformers")
+            transformers.logging.set_verbosity(transformers.logging.CRITICAL)
             tokenizer_loader = transformers.AutoTokenizer.from_pretrained
-        tokenizer = tokenizer_loader(tokenizer_reference, local_files_only=True)
+        with (
+            contextlib.redirect_stdout(io.StringIO()),
+            contextlib.redirect_stderr(io.StringIO()),
+        ):
+            tokenizer = tokenizer_loader(tokenizer_reference, local_files_only=True)
     except (ImportError, OSError, ValueError) as error:
+        error_text = re.sub(r"/(?:[\w.@+-]+/)+", ".../", str(error))
         diagnostics.append(
             "needs-new-evidence: local DeBERTa tokenizer is unavailable for "
-            f"{tokenizer_reference!r}: {error}"
+            f"{tokenizer_reference!r}: {error_text}"
         )
         return {
             "diagnostics": diagnostics,

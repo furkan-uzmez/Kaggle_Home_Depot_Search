@@ -64,3 +64,5 @@ coverage.xml
 docs/competation_pages
 .agent
 /results/
+# Private local notes (not for public release)
+private_notes/
