@@ -695,17 +695,18 @@ preprocessing_contract
 # Raw text is preserved, and vectorizers and scalers are configured to fit only
 # on each training fold. The audit found 692 normalized duplicate text pairs,
 # 72,668 rows with repeated queries, and 31,302 rows with repeated products;
-# tokenizer truncation evidence remains unavailable.
+# tokenizer truncation evidence is now available (24.63% truncation at
+# `max_length=512`, per section 7).
 #
 # ### Interpretation
 # Fold-local preprocessing is necessary to avoid leakage from repeated text and
-# entities, while DeBERTa truncation must remain an unresolved configuration
-# decision until the local tokenizer runs.
+# entities, and the DeBERTa truncation rate is now a resolved, evidence-backed
+# configuration input rather than an open question.
 #
 # ### Action
 # Keep raw text immutable, fit all learned preprocessing inside each training
-# fold, include duplicate/entity-overlap checks in validation, and defer
-# DeBERTa maximum-length selection until `sentencepiece` enables local evidence.
+# fold, include duplicate/entity-overlap checks in validation, and use
+# `max_length=512` for DeBERTa fine-tuning per the section 7 evidence.
 
 # %% [markdown]
 # ## 9. Findings and Next Actions
